@@ -12,8 +12,8 @@ Built as the user-facing interface layer for the [Event-Driven Backtesting Engin
 ┌──────────────────────────────────────────────────────┐
 │                   Next.js Frontend                   │
 │  ┌──────────┐  ┌───────────┐  ┌───────────────────┐  │
-│  │ Strategy │  │  Universe  │  │   Live Dashboard  │ │
-│  │   Input  │  │  Selector  │  │  (Charts, Trades, │ │
+│  │ Strategy │  │  Universe  │  │   Live Dashboard │  │
+│  │   Input  │  │  Selector  │  │  (Charts, Trades,│  │
 │  │  (NL/Py) │  │ (NL/Chips) │  │   Metrics, AI)   │  │
 │  └────┬─────┘  └─────┬─────┘  └────────┬──────────┘  │
 │       │              │                  │            │
