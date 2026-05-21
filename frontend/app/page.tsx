@@ -24,6 +24,7 @@ import TradeLog from '@/components/analytics/TradeLog'
 import AIReport from '@/components/report/AIReport'
 import UniverseNotes from '@/components/analytics/UniverseNotes'
 import SystemOverlay from '@/components/sections/SystemOverlay'
+import LandingPage from '@/components/sections/LandingPage'
 
 import { Shield, TrendingUp, Cpu, Sun, Moon, Info } from 'lucide-react'
 
@@ -46,6 +47,7 @@ export default function TerminalDashboard() {
   const [theme, setTheme] = React.useState<'light' | 'dark'>('light')
   const [llmSettingsOpen, setLlmSettingsOpen] = React.useState(false)
   const [overlayOpen, setOverlayOpen] = React.useState(true)
+  const [showLanding, setShowLanding] = React.useState(true)
 
   React.useEffect(() => {
     const savedTheme = localStorage.getItem('theme') as 'light' | 'dark' | null
@@ -118,6 +120,11 @@ export default function TerminalDashboard() {
       setError(err.message || 'Failed to launch backtest')
       toast.error(err.message || 'Backtest execution failed.')
     }
+  }
+
+  // Show landing page on first visit
+  if (showLanding) {
+    return <LandingPage onLaunch={() => setShowLanding(false)} />
   }
 
   return (
