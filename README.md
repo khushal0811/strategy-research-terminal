@@ -10,24 +10,24 @@ Built as the user-facing interface layer for the [Event-Driven Backtesting Engin
 
 ```
 ┌──────────────────────────────────────────────────────┐
-│                   Next.js Frontend                    │
+│                   Next.js Frontend                   │
 │  ┌──────────┐  ┌───────────┐  ┌───────────────────┐  │
-│  │ Strategy │  │  Universe  │  │   Live Dashboard  │  │
-│  │   Input  │  │  Selector  │  │  (Charts, Trades, │  │
+│  │ Strategy │  │  Universe  │  │   Live Dashboard  │ │
+│  │   Input  │  │  Selector  │  │  (Charts, Trades, │ │
 │  │  (NL/Py) │  │ (NL/Chips) │  │   Metrics, AI)   │  │
 │  └────┬─────┘  └─────┬─────┘  └────────┬──────────┘  │
-│       │              │                  │              │
-│       ▼              ▼                  ▲              │
+│       │              │                  │            │
+│       ▼              ▼                  ▲            │
 │  ┌─────────┐   ┌──────────┐    ┌───────┴────────┐    │
 │  │  Groq   │   │ POST /api│    │ WS /ws/backtest│    │
 │  │  LLM    │   │ /backtest│    │   /{run_id}    │    │
 │  │ Resolver│   │  /run    │    └───────┬────────┘    │
 │  └─────────┘   └────┬─────┘           │              │
-└──────────────────────┼─────────────────┼──────────────┘
+└──────────────────────┼─────────────────┼─────────────┘
                        │                 │
                        ▼                 ▲
 ┌──────────────────────┴─────────────────┴──────────────┐
-│                  FastAPI Backend                        │
+│                  FastAPI Backend                      │
 │  ┌────────────┐  ┌──────────────┐  ┌───────────────┐  │
 │  │  Pydantic  │  │   Config     │  │   WebSocket   │  │
 │  │  Schema    │→ │  Validator   │→ │    Manager    │  │
@@ -35,7 +35,7 @@ Built as the user-facing interface layer for the [Event-Driven Backtesting Engin
 │  └────────────┘  └──────────────┘  └───────┬───────┘  │
 │                                            │          │
 │  ┌────────────┐                    ┌───────▼───────┐  │
-│  │  Pipeline  │ ← yfinance ←───── │  run_backtest │  │
+│  │  Pipeline  │ ← yfinance ←───── │  run_backtest  │  │
 │  │  Fetcher   │                    │ _from_config  │  │
 │  └────────────┘                    └───────────────┘  │
 └───────────────────────────────────────────────────────┘
