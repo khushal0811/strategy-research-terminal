@@ -44,7 +44,7 @@ export default function TerminalDashboard() {
     setLlmApiKey,
   } = store
 
-  const [theme, setTheme] = React.useState<'light' | 'dark'>('light')
+  const [theme, setTheme] = React.useState<'light' | 'dark'>('dark')
   const [llmSettingsOpen, setLlmSettingsOpen] = React.useState(false)
   const [overlayOpen, setOverlayOpen] = React.useState(true)
   const [showLanding, setShowLanding] = React.useState(true)
@@ -59,8 +59,8 @@ export default function TerminalDashboard() {
         document.documentElement.classList.remove('dark')
       }
     } else {
-      // Default to light — remove dark class that layout.tsx may have set
-      document.documentElement.classList.remove('dark')
+      // Default to dark
+      document.documentElement.classList.add('dark')
     }
   }, [])
 
