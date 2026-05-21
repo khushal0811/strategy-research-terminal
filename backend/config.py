@@ -36,9 +36,9 @@ def _require_env(key: str) -> str:
     return value
 
 
-DATA_DIR      = _require_env("DATA_DIR")
-ENGINE_PATH   = _require_env("ENGINE_PATH")
-PIPELINE_PATH = _require_env("PIPELINE_PATH")
+DATA_DIR      = os.environ.get("DATA_DIR", "/app/data")
+ENGINE_PATH   = os.environ.get("ENGINE_PATH", "/app/engine")
+PIPELINE_PATH = os.environ.get("PIPELINE_PATH", "/app/pipeline")
 
 # ---------------------------------------------------------------------------
 # Add both repos to sys.path so engine and pipeline are importable

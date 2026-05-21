@@ -16,6 +16,8 @@ env/
 
 # Environment variables (secrets)
 .env
+.env.local
+.env.production
 
 # Node / Next.js
 node_modules/
@@ -36,3 +38,8 @@ Thumbs.db
 # Data / Parquet files
 data/
 *.parquet
+
+# Context / design docs
+context/
+Context/
+
