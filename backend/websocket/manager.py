@@ -76,6 +76,9 @@ def _build_engine_config(req) -> BacktestConfig:
         stop_fraction    = req.stop_fraction,
         benchmark_symbol = req.benchmark_symbol,
         include_dividends= req.include_dividends,
+        commission_model = req.commission_model,
+        commission_value = req.commission_value,
+        slippage_bps     = req.slippage_bps,
     )
 
 
@@ -102,6 +105,7 @@ def _serialize_metrics(result) -> dict:
         "final_value":                result.final_value,
         "benchmark_return":           result.benchmark_return,
         "alpha":                      result.alpha,
+        "total_commission_paid":      result.total_commission_paid,
     }
 
 

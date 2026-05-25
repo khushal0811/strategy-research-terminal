@@ -15,9 +15,9 @@ Run registry:
 """
 
 import uuid
-from typing import Dict
+from typing import Dict, Optional
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Header
 
 import config  # noqa: F401 — triggers sys.path setup before any pipeline imports
 
@@ -117,7 +117,10 @@ def list_symbols() -> dict:
     summary="Launch a backtest",
     tags=["backtest"],
 )
-def launch_backtest(req: BacktestRequestSchema) -> BacktestRunResponse:
+async def launch_backtest(
+    req: BacktestRequestSchema,
+    authorization: Optional[str] = Header(None),
+) -> BacktestRunResponse:
     """
     Validate, fetch missing data, and register a backtest run. Returns a run_id.
 
@@ -140,6 +143,25 @@ def launch_backtest(req: BacktestRequestSchema) -> BacktestRunResponse:
     """
     from pipeline.fetcher import ensure_symbols_available
     from validation.config_validator import validate_backtest_request
+
+    # Resolve user settings if token is provided
+    user = None
+    if authorization and authorization.startswith("Bearer "):
+        token = authorization.split(" ")[1]
+        try:
+            from auth.utils import get_current_user_from_token
+            from db.database import AsyncSessionLocal
+            async with AsyncSessionLocal() as db:
+                user = await get_current_user_from_token(token, db)
+        except Exception:
+            pass
+
+    if user:
+        if req.commission_model == "flat" and req.commission_value == 0.0:
+            req.commission_model = user.commission_model
+            req.commission_value = user.commission_value
+        if req.slippage_bps == 0.0:
+            req.slippage_bps = user.slippage_bps
 
     # ------------------------------------------------------------------
     # Step 1: Business-logic validation (dates, capital, strategy, intraday limits).

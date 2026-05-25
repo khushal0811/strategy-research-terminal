@@ -71,6 +71,7 @@ export default function MetricsPanel() {
     dividendIncome: isComplete ? formatCurrency(metrics.total_dividend_income) : '—',
     initialCapital: isComplete ? formatCurrency(metrics.initial_value) : '—',
     finalValue: isComplete ? formatCurrency(metrics.final_value) : '—',
+    totalCommissionPaid: isComplete ? formatCurrency(metrics.total_commission_paid) : '—',
 
     benchmarkReturn: isComplete ? formatPercent(metrics.benchmark_return) : '—',
     benchmarkReturnClass: isComplete ? getReturnClass(metrics.benchmark_return) : 'text-muted-foreground',
@@ -108,6 +109,7 @@ export default function MetricsPanel() {
         {/* Execution Group */}
         <MetricRow label="Total Trades" value={data.totalTrades} />
         <MetricRow label="Dividend Income" value={data.dividendIncome} valueClass={isComplete && metrics.total_dividend_income > 0 ? 'text-emerald-500' : 'text-foreground'} />
+        <MetricRow label="Commission Paid" value={data.totalCommissionPaid} />
         <MetricRow label="Initial Capital" value={data.initialCapital} />
         <MetricRow label="Final Value" value={data.finalValue} />
 

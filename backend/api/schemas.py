@@ -146,6 +146,22 @@ class BacktestRequestSchema(BaseModel):
         description="ATR fallback stop distance as a fraction of price.",
     )
 
+    # Transaction costs — applied per fill
+    commission_model: str = Field(
+        default="flat",
+        description="Commission model to apply: 'flat' | 'per_share' | 'percentage'.",
+    )
+    commission_value: float = Field(
+        default=0.0,
+        ge=0,
+        description="Commission value based on model.",
+    )
+    slippage_bps: float = Field(
+        default=0.0,
+        ge=0,
+        description="Slippage in basis points.",
+    )
+
     # Optional
     benchmark_symbol: Optional[str] = Field(
         default="SPY",

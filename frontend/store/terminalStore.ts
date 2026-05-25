@@ -42,6 +42,7 @@ export interface BacktestMetrics {
   final_value: number
   benchmark_return: number | null
   alpha: number | null
+  total_commission_paid: number
 }
 
 interface TerminalState {
