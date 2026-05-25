@@ -1,4 +1,5 @@
 import { WsMessage } from '@/types'
+import { useAuthStore } from '@/store/authStore'
 
 const WS_URL = process.env.NEXT_PUBLIC_WS_URL || 'ws://127.0.0.1:8000'
 
@@ -19,8 +20,11 @@ interface TerminalStoreActions {
  * Maps incoming events to Zustand store actions.
  */
 export function connectBacktest(runId: string, store: TerminalStoreActions): WebSocket {
-  const uri = `${WS_URL}/ws/backtest/${runId}`
-  const ws = new WebSocket(uri)
+  const token = useAuthStore.getState().accessToken
+  const wsUrl = token
+    ? `${WS_URL}/ws/backtest/${runId}?token=${token}`
+    : `${WS_URL}/ws/backtest/${runId}`
+  const ws = new WebSocket(wsUrl)
 
   ws.onmessage = (event) => {
     try {

@@ -23,5 +23,5 @@ export type WsMessage =
   | { type: 'progress'; bar: number; total: number; percent: number; equity: number; timestamp: string }
   | { type: 'trade'; symbol: string; side: 'BUY' | 'SELL'; quantity: number; fill_price: number; timestamp: string }
   | { type: 'dividend'; symbol: string; dividend_per_share: number; timestamp: string }
-  | { type: 'complete'; metrics: import('../store/terminalStore').BacktestMetrics }
+  | { type: 'complete'; metrics: import('../store/terminalStore').BacktestMetrics; db_run_id?: string | null }
   | { type: 'error'; message: string }

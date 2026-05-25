@@ -134,7 +134,11 @@ def _run_engine_in_thread(req, emit_fn, shutdown_event: threading.Event) -> dict
 # Main streaming coroutine
 # ---------------------------------------------------------------------------
 
-async def run_and_stream(websocket: WebSocket, req) -> None:
+async def run_and_stream(
+    websocket: WebSocket,
+    req,
+    user_id: Optional[str] = None,
+) -> None:
     """
     Run the backtest engine in a thread pool and stream all results live.
 
@@ -149,6 +153,7 @@ async def run_and_stream(websocket: WebSocket, req) -> None:
     Args:
         websocket : Accepted FastAPI WebSocket connection.
         req       : BacktestRequestSchema — the validated run config.
+        user_id   : Optional authenticated user ID.
     """
     queue: asyncio.Queue = asyncio.Queue()
     loop  = asyncio.get_event_loop()
@@ -156,6 +161,9 @@ async def run_and_stream(websocket: WebSocket, req) -> None:
     # threading.Event — NOT asyncio.Event — because emit() is called from a
     # thread pool worker. threading.Event.is_set() and .set() are thread-safe.
     disconnected = threading.Event()
+    
+    # Store equity curve data points
+    equity_curve = []
 
     # ------------------------------------------------------------------
     # emit() — the engine's callback, called synchronously from thread pool
@@ -187,6 +195,14 @@ async def run_and_stream(websocket: WebSocket, req) -> None:
                 # Wait up to 100ms for next message.
                 # Short timeout keeps the loop responsive for engine completion.
                 message = await asyncio.wait_for(queue.get(), timeout=0.1)
+                
+                # Accumulate equity curve points if progress update
+                if message.get("type") == "progress":
+                    equity_curve.append({
+                        "timestamp": message.get("timestamp"),
+                        "equity": message.get("equity")
+                    })
+                
                 await websocket.send_json(message)
 
             except asyncio.TimeoutError:
@@ -198,9 +214,40 @@ async def run_and_stream(websocket: WebSocket, req) -> None:
                     result = future.result()
 
                     if result["ok"]:
+                        db_run_id = None
+                        if user_id:
+                            try:
+                                from db.database import AsyncSessionLocal
+                                from db.models import BacktestRun
+                                async with AsyncSessionLocal() as db:
+                                    run = BacktestRun(
+                                        user_id         = user_id,
+                                        symbols         = req.symbols,
+                                        strategy_type   = req.strategy.type,
+                                        strategy_params = req.strategy.parameters or {},
+                                        start_date      = req.start_date,
+                                        end_date        = req.end_date,
+                                        interval        = req.interval,
+                                        initial_capital = req.initial_capital,
+                                        position_sizing = req.position_sizing,
+                                        risk_per_trade  = req.risk_per_trade,
+                                        benchmark_symbol= req.benchmark_symbol,
+                                        status          = "complete",
+                                        equity_curve    = equity_curve,
+                                        **{k: v for k, v in result["metrics"].items()
+                                           if k not in ("equity_curve",)},
+                                    )
+                                    db.add(run)
+                                    await db.commit()
+                                    await db.refresh(run)
+                                    db_run_id = str(run.id)
+                            except Exception as e:
+                                print(f"[manager] Warning: could not save run to DB: {e}")
+
                         await websocket.send_json({
                             "type":    "complete",
                             "metrics": result["metrics"],
+                            "db_run_id": db_run_id,
                         })
                     else:
                         await websocket.send_json({

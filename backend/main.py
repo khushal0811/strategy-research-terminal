@@ -20,6 +20,11 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from api.routes import router
 
+from typing import Optional
+from db.database import create_tables
+from auth.router import router as auth_router
+from runs.router import router as runs_router
+
 app = FastAPI(
     title="Strategy Research Terminal",
     description="FastAPI backend for the AI-assisted quantitative research platform.",
@@ -35,6 +40,13 @@ app.add_middleware(
 )
 
 app.include_router(router, prefix="/api")
+app.include_router(auth_router)           # /auth/register, /auth/login etc.
+app.include_router(runs_router, prefix="/api")  # /api/runs/
+
+
+@app.on_event("startup")
+async def startup():
+    await create_tables()
 
 
 @app.get("/health", tags=["health"])
@@ -44,7 +56,11 @@ def health():
 
 
 @app.websocket("/ws/backtest/{run_id}")
-async def websocket_backtest(websocket: WebSocket, run_id: str):
+async def websocket_backtest(
+    websocket: WebSocket,
+    run_id: str,
+    token: Optional[str] = None,  # JWT passed as query param
+):
     """
     WebSocket endpoint — streams live backtest results.
 
@@ -64,7 +80,19 @@ async def websocket_backtest(websocket: WebSocket, run_id: str):
     await websocket.accept()
     try:
         req = get_run_config(run_id)
-        await run_and_stream(websocket, req)
+
+        # Resolve authenticated user if token provided
+        user = None
+        if token:
+            try:
+                from auth.utils import get_current_user_from_token
+                from db.database import AsyncSessionLocal
+                async with AsyncSessionLocal() as db:
+                    user = await get_current_user_from_token(token, db)
+            except Exception:
+                pass  # unauthenticated run — still execute, just don't save
+
+        await run_and_stream(websocket, req, user_id=str(user.id) if user else None)
     except WebSocketDisconnect:
         pass
     except Exception as exc:
