@@ -5,6 +5,11 @@ pydantic
 websockets
 python-multipart
 python-dotenv
+sqlalchemy
+asyncpg
+bcrypt
+python-jose[cryptography]
+
 
 # Pipeline + engine runtime deps (imported via sys.path, not installed as packages)
 pandas>=2.0.0

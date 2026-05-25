@@ -1,5 +1,6 @@
 import { WsMessage } from '@/types'
 import { useAuthStore } from '@/store/authStore'
+import { useTerminalStore } from '@/store/terminalStore'
 
 const WS_URL = process.env.NEXT_PUBLIC_WS_URL || 'ws://127.0.0.1:8000'
 
@@ -76,7 +77,8 @@ export function connectBacktest(runId: string, store: TerminalStoreActions): Web
 
   ws.onclose = () => {
     // If connection drops before completing normally, report unexpected disconnect
-    if (store.status === 'running') {
+    const currentStatus = useTerminalStore.getState().status
+    if (currentStatus === 'running') {
       store.setError('Connection closed unexpectedly.')
     }
   }

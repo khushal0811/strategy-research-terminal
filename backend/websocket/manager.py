@@ -224,6 +224,7 @@ async def run_and_stream(
                                 from db.database import AsyncSessionLocal
                                 from db.models import BacktestRun
                                 async with AsyncSessionLocal() as db:
+                                    metrics = result["metrics"]
                                     run = BacktestRun(
                                         user_id         = user_id,
                                         symbols         = req.symbols,
@@ -238,8 +239,18 @@ async def run_and_stream(
                                         benchmark_symbol= req.benchmark_symbol,
                                         status          = "complete",
                                         equity_curve    = equity_curve,
-                                        **{k: v for k, v in result["metrics"].items()
-                                           if k not in ("equity_curve",)},
+                                        total_return    = metrics.get("total_return"),
+                                        price_return    = metrics.get("price_return"),
+                                        cagr            = metrics.get("cagr"),
+                                        sharpe_ratio    = metrics.get("sharpe_ratio"),
+                                        max_drawdown    = metrics.get("max_drawdown"),
+                                        volatility      = metrics.get("volatility"),
+                                        win_rate        = metrics.get("win_rate"),
+                                        total_trades    = metrics.get("total_trades"),
+                                        final_value     = metrics.get("final_value"),
+                                        dividend_income = metrics.get("total_dividend_income"),
+                                        benchmark_return = metrics.get("benchmark_return"),
+                                        alpha           = metrics.get("alpha"),
                                     )
                                     db.add(run)
                                     await db.commit()
