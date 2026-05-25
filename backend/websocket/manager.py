@@ -109,7 +109,7 @@ def _serialize_metrics(result) -> dict:
 # Engine thread function
 # ---------------------------------------------------------------------------
 
-def _run_engine_in_thread(req, emit_fn) -> dict:
+def _run_engine_in_thread(req, emit_fn, shutdown_event: threading.Event) -> dict:
     """
     Blocking engine execution — runs in thread pool executor.
 
@@ -123,6 +123,7 @@ def _run_engine_in_thread(req, emit_fn) -> dict:
             config        = engine_config,
             emit_callback = emit_fn,
             data_dir      = config.DATA_DIR,
+            shutdown_event= shutdown_event,
         )
         return {"ok": True, "metrics": _serialize_metrics(result)}
     except Exception as exc:
@@ -175,7 +176,7 @@ async def run_and_stream(websocket: WebSocket, req) -> None:
     # ------------------------------------------------------------------
     # Launch engine — non-blocking (runs in default ThreadPoolExecutor)
     # ------------------------------------------------------------------
-    future = loop.run_in_executor(None, _run_engine_in_thread, req, emit)
+    future = loop.run_in_executor(None, _run_engine_in_thread, req, emit, disconnected)
 
     # ------------------------------------------------------------------
     # Stream loop — drain queue and forward to WebSocket

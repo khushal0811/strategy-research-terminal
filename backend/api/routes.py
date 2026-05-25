@@ -158,8 +158,12 @@ def launch_backtest(req: BacktestRequestSchema) -> BacktestRunResponse:
     # interval and date range the user requested.
     # ------------------------------------------------------------------
     try:
+        symbols_to_fetch = list(req.symbols)
+        if req.benchmark_symbol and req.benchmark_symbol not in symbols_to_fetch:
+            symbols_to_fetch.append(req.benchmark_symbol)
+
         newly_fetched = ensure_symbols_available(
-            symbols           = req.symbols,
+            symbols           = symbols_to_fetch,
             start_date        = req.start_date,
             end_date          = req.end_date,
             interval          = req.interval,

@@ -68,7 +68,7 @@ export default function SimulationParameters() {
 
         <div className="space-y-1.5">
           <label htmlFor="benchmark-input" className="text-xs font-medium text-foreground">
-            Benchmark Ticker
+            Benchmark
           </label>
           <Input
             id="benchmark-input"

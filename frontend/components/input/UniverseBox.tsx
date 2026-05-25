@@ -62,31 +62,14 @@ export default function UniverseBox() {
       const data = await response.json()
 
       if (data.exists) {
-        const dataStartStr = data.start // YYYY-MM-DD
-        const isPartial = dataStartStr && startDate && new Date(dataStartStr) > new Date(startDate)
-
-        if (isPartial) {
-          const formattedDate = new Date(dataStartStr).toLocaleDateString('en-US', {
-            month: 'short',
-            year: 'numeric',
-          })
-          updateSymbol(cleanSymbol, {
-            status: 'partial',
-            availableFrom: dataStartStr,
-            availableTo: data.end || undefined,
-            rowCount: data.row_count,
-          })
-          toast.warning(
-            `${cleanSymbol} has data from ${formattedDate} — included from that date onwards`
-          )
-        } else {
-          updateSymbol(cleanSymbol, {
-            status: 'ok',
-            availableFrom: dataStartStr || undefined,
-            availableTo: data.end || undefined,
-            rowCount: data.row_count,
-          })
-        }
+        // Data is always re-fetched fresh from yfinance at run-time,
+        // so the cached file dates are irrelevant — mark as ok.
+        updateSymbol(cleanSymbol, {
+          status: 'ok',
+          availableFrom: data.start || undefined,
+          availableTo: data.end || undefined,
+          rowCount: data.row_count,
+        })
       } else if (data.fetchable) {
         // No local data yet, but valid yfinance ticker — will be fetched at run-time
         updateSymbol(cleanSymbol, { status: 'ok' })
