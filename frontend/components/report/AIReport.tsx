@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react'
 import { useTerminalStore } from '@/store/terminalStore'
+import { useAuthStore } from '@/store/authStore'
 import { generateAiReport } from '@/llm/reportGenerator'
 import { GroqProvider } from '@/llm/providers'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -11,7 +12,7 @@ import { Loader2, Sparkles, FileText } from 'lucide-react'
 import { toast } from 'sonner'
 
 export default function AIReport() {
-  const { metrics, report, setReport, llmApiKey, status } = useTerminalStore()
+  const { metrics, report, setReport, llmApiKey, status, dbRunId } = useTerminalStore()
   const [isLoading, setIsLoading] = useState(false)
 
   if (status !== 'complete' || !metrics) {
@@ -25,6 +26,14 @@ export default function AIReport() {
       const mdReport = await generateAiReport(metrics, provider)
       setReport(mdReport)
       toast.success('AI Performance Report generated successfully!')
+
+      // Auto-save to database if authenticated and dbRunId is available
+      const token = useAuthStore.getState().accessToken
+      if (token && dbRunId) {
+        const { saveReport } = await import('@/hooks/useRuns')
+        await saveReport(token, dbRunId, mdReport)
+        toast.success('AI Report saved to history.')
+      }
     } catch (error: any) {
       console.error('Failed to generate report:', error)
       toast.error(error.message || 'Failed to generate performance report.')

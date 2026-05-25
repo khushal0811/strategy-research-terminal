@@ -70,6 +70,7 @@ interface TerminalState {
 
   // Run state
   runId: string | null
+  dbRunId: string | null
   status: RunStatus
   progress: number
   errorMessage: string | null
@@ -101,6 +102,7 @@ interface TerminalState {
   setLlmProvider: (p: string) => void
   setLlmApiKey: (k: string) => void
   setRunId: (id: string | null) => void
+  setDbRunId: (id: string | null) => void
   setStatus: (s: RunStatus) => void
   setProgress: (p: number) => void
   appendEquityPoint: (p: EquityPoint) => void
@@ -138,6 +140,7 @@ export const useTerminalStore = create<TerminalState>((set) => ({
   llmProvider: 'groq',
   llmApiKey: '',
   runId: null,
+  dbRunId: null,
   status: 'idle',
   progress: 0,
   errorMessage: null,
@@ -177,6 +180,7 @@ export const useTerminalStore = create<TerminalState>((set) => ({
   setLlmProvider: (p) => set({ llmProvider: p }),
   setLlmApiKey: (k) => set({ llmApiKey: k }),
   setRunId: (id) => set({ runId: id }),
+  setDbRunId: (id) => set({ dbRunId: id }),
   setStatus: (s) => set({ status: s }),
   setProgress: (p) => set({ progress: p }),
   appendEquityPoint: (p) => set((state) => ({ equityCurve: [...state.equityCurve, p] })),
@@ -187,7 +191,7 @@ export const useTerminalStore = create<TerminalState>((set) => ({
   setReport: (r) => set({ report: r }),
   setError: (msg) => set({ status: 'error', errorMessage: msg }),
   resetRun: () => set({
-    runId: null, status: 'idle', progress: 0, errorMessage: null,
+    runId: null, dbRunId: null, status: 'idle', progress: 0, errorMessage: null,
     equityCurve: [], trades: [], dividendEvents: [], currentEquity: 0,
     metrics: null, report: null,
   }),

@@ -26,6 +26,13 @@ import UniverseNotes from '@/components/analytics/UniverseNotes'
 import SystemOverlay from '@/components/sections/SystemOverlay'
 import LandingPage from '@/components/sections/LandingPage'
 
+// Auth & History Components
+import { useAuthStore } from '@/store/authStore'
+import { fetchMe } from '@/hooks/useAuth'
+import UserMenu from '@/components/auth/UserMenu'
+import AccountSettings from '@/components/settings/AccountSettings'
+import RunHistory from '@/components/history/RunHistory'
+
 import { Shield, TrendingUp, Cpu, Sun, Moon, Info } from 'lucide-react'
 
 export default function TerminalDashboard() {
@@ -44,10 +51,28 @@ export default function TerminalDashboard() {
     setLlmApiKey,
   } = store
 
+  const { accessToken, setUser } = useAuthStore()
+
   const [theme, setTheme] = React.useState<'light' | 'dark'>('dark')
   const [llmSettingsOpen, setLlmSettingsOpen] = React.useState(false)
   const [overlayOpen, setOverlayOpen] = React.useState(true)
   const [showLanding, setShowLanding] = React.useState(true)
+  const [settingsOpen, setSettingsOpen] = React.useState(false)
+
+  React.useEffect(() => {
+    async function loadUser() {
+      if (accessToken) {
+        try {
+          const u = await fetchMe(accessToken)
+          setUser(u)
+        } catch {
+          // If token expired, clear tokens
+          useAuthStore.getState().logout()
+        }
+      }
+    }
+    loadUser()
+  }, [accessToken, setUser])
 
   React.useEffect(() => {
     const savedTheme = localStorage.getItem('theme') as 'light' | 'dark' | null
@@ -180,6 +205,7 @@ export default function TerminalDashboard() {
                 <Moon className="h-3.5 w-3.5 text-indigo-500" />
               )}
             </button>
+            <UserMenu onOpenSettings={() => setSettingsOpen(true)} />
           </div>
         </div>
       </header>
@@ -267,8 +293,14 @@ export default function TerminalDashboard() {
         </main>
 
         {/* Column 3: Live Execution Blotter Sidebar */}
-        <aside className="border border-border bg-card/25 rounded w-full lg:h-full flex flex-col overflow-hidden">
-          <TradeLog />
+        <aside className="border border-border bg-card/25 rounded w-full lg:h-full flex flex-col overflow-hidden p-4 space-y-4">
+          <div className="flex-1 min-h-0 overflow-hidden">
+            <TradeLog />
+          </div>
+          <div className="h-px bg-border/40 w-full" />
+          <div className="h-[280px] shrink-0 overflow-hidden flex flex-col">
+            <RunHistory />
+          </div>
         </aside>
       </div>
 
@@ -292,6 +324,7 @@ export default function TerminalDashboard() {
 
       {/* System architecture onboarding overlay */}
       <SystemOverlay open={overlayOpen} onClose={() => setOverlayOpen(false)} />
+      <AccountSettings isOpen={settingsOpen} onClose={() => setSettingsOpen(false)} />
     </div>
   )
 }

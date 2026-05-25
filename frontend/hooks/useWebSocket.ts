@@ -11,6 +11,7 @@ interface TerminalStoreActions {
   appendTrade: (t: any) => void
   appendDividend: (d: { symbol: string; dividend_per_share: number; timestamp: string }) => void
   setMetrics: (m: any) => void
+  setDbRunId: (id: string | null) => void
   setStatus: (s: any) => void
   setError: (msg: string) => void
 }
@@ -52,6 +53,9 @@ export function connectBacktest(runId: string, store: TerminalStoreActions): Web
           timestamp: msg.timestamp,
         })
       } else if (msg.type === 'complete') {
+        if (msg.db_run_id) {
+          store.setDbRunId(msg.db_run_id)
+        }
         store.setMetrics(msg.metrics)
         store.setStatus('complete')
         ws.close()
