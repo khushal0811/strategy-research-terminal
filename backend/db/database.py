@@ -2,10 +2,16 @@ from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import declarative_base, sessionmaker
 import os
 
-DATABASE_URL = os.environ.get(
-    "DATABASE_URL",
-    "postgresql+asyncpg://postgres:postgres@localhost:5432/strategy_terminal"
-)
+raw_url = os.environ.get("DATABASE_URL")
+if raw_url:
+    if raw_url.startswith("postgres://"):
+        DATABASE_URL = raw_url.replace("postgres://", "postgresql+asyncpg://", 1)
+    elif raw_url.startswith("postgresql://") and not raw_url.startswith("postgresql+asyncpg://"):
+        DATABASE_URL = raw_url.replace("postgresql://", "postgresql+asyncpg://", 1)
+    else:
+        DATABASE_URL = raw_url
+else:
+    DATABASE_URL = "postgresql+asyncpg://postgres:postgres@localhost:5432/strategy_terminal"
 
 engine = create_async_engine(DATABASE_URL, echo=False)
 
