@@ -77,7 +77,7 @@ export default function RunButton({ onRun }: RunButtonProps) {
         return (
           <>
             <span className="mr-2 font-mono font-bold text-emerald-500">[✓]</span>
-            Backtest Complete — Run New Simulation
+            Rerun Simulation
           </>
         )
       case 'idle':
