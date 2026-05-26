@@ -59,6 +59,14 @@ export default function TerminalDashboard() {
   const [showLanding, setShowLanding] = React.useState(true)
   const [settingsOpen, setSettingsOpen] = React.useState(false)
 
+  // Hydrate auth tokens from localStorage on client mount.
+  // This MUST run before loadUser — without it, accessToken is null after
+  // every page refresh, which silently breaks: auth headers on POST /api/backtest/run,
+  // authenticated WebSocket connections (no DB save), and AI report persistence.
+  React.useEffect(() => {
+    useAuthStore.getState().hydrate()
+  }, [])
+
   React.useEffect(() => {
     async function loadUser() {
       if (accessToken) {

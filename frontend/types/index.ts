@@ -5,6 +5,7 @@
 export interface SymbolInfoResponse {
   symbol: string
   exists: boolean
+  fetchable: boolean
   start: string | null
   end: string | null
   row_count: number
