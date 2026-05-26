@@ -395,141 +395,15 @@ export default function LandingPage({ onLaunch }: LandingPageProps) {
               </div>
             </div>
 
-            {/* Bloomberg-styled Grid Layout */}
-            <div className="grid grid-cols-1 md:grid-cols-12 h-[480px]">
-              {/* Left Panel: Settings Mockup (Cols 1-4) */}
-              <div className="md:col-span-4 border-r border-white/[0.06] bg-black/20 p-4 space-y-4 flex flex-col justify-between overflow-y-auto">
-                <div className="space-y-4">
-                  <div className="text-[10px] text-[#64748B] border-b border-white/[0.04] pb-1 font-bold uppercase tracking-wider">STRATEGY PROPERTIES</div>
-                  
-                  {/* Prompt Field */}
-                  <div className="space-y-1.5">
-                    <label className="text-[8px] text-[#64748B] uppercase tracking-wider block">Natural language rules</label>
-                    <div className="border border-white/[0.08] bg-[#030712] rounded p-2 text-[10px] text-[#F8FAFC]">
-                      Moving Average crossover on AMD daily using 20 and 50 thresholds
-                    </div>
-                  </div>
-
-                  {/* Settings grid */}
-                  <div className="grid grid-cols-2 gap-2 text-[9px]">
-                    <div>
-                      <span className="text-[8px] text-[#64748B] block">TICKER SYMBOLS</span>
-                      <span className="text-[#F8FAFC] font-semibold font-mono">AMD</span>
-                    </div>
-                    <div>
-                      <span className="text-[8px] text-[#64748B] block">TIME INTERVAL</span>
-                      <span className="text-[#F8FAFC] font-semibold font-mono">Daily (Snappy)</span>
-                    </div>
-                    <div>
-                      <span className="text-[8px] text-[#64748B] block">INITIAL CAPITAL</span>
-                      <span className="text-[#F8FAFC] font-semibold font-mono">$100,000.00</span>
-                    </div>
-                    <div>
-                      <span className="text-[8px] text-[#64748B] block">EXECUTION COMMISSION</span>
-                      <span className="text-[#F8FAFC] font-semibold font-mono">0.00% (No Fee)</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* History Trigger Card Mockup */}
-                <div className="border border-white/[0.06] bg-[#0A0F1F]/40 p-2.5 rounded-lg flex items-center justify-between text-[10px]">
-                  <div className="flex items-center space-x-2">
-                    <Database className="h-4 w-4 text-[#3B82F6]" />
-                    <div className="flex flex-col">
-                      <span className="font-bold text-[#F8FAFC]">Run History</span>
-                      <span className="text-[8px] text-[#64748B]">View 12 saved backtests</span>
-                    </div>
-                  </div>
-                  <span className="px-1.5 py-0.5 rounded bg-[#64748B]/20 text-[#94A3B8] font-bold font-mono text-[8px]">12</span>
-                </div>
-              </div>
-
-              {/* Center Panel: Curves & Charts (Cols 5-9) */}
-              <div className="md:col-span-5 bg-black/45 p-4 flex flex-col justify-between overflow-y-auto">
-                <div className="text-[10px] text-[#64748B] border-b border-white/[0.04] pb-1 font-bold uppercase tracking-wider">PERFORMANCE INSTRUMENTATION</div>
-
-                {/* Main plot mockup */}
-                <div className="h-56 flex flex-col justify-between pt-2">
-                  <svg className="w-full h-44" viewBox="0 0 350 140" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    {/* Grid lines */}
-                    <line x1="0" y1="28" x2="350" y2="28" stroke="rgba(255,255,255,0.03)" strokeWidth="1" />
-                    <line x1="0" y1="56" x2="350" y2="56" stroke="rgba(255,255,255,0.03)" strokeWidth="1" />
-                    <line x1="0" y1="84" x2="350" y2="84" stroke="rgba(255,255,255,0.03)" strokeWidth="1" />
-                    <line x1="0" y1="112" x2="350" y2="112" stroke="rgba(255,255,255,0.03)" strokeWidth="1" />
-                    {/* Benchmark Curve */}
-                    <path d="M 0,110 Q 90,95 180,82 T 350,68" stroke="#64748B" strokeWidth="1" strokeDasharray="3,2" />
-                    {/* Portfolio Curve */}
-                    <path d="M 0,120 Q 70,88 150,65 T 260,34 T 350,18" stroke="#3B82F6" strokeWidth="2" />
-                  </svg>
-                  
-                  <div className="flex justify-between items-center text-[7px] text-[#64748B] font-mono select-none">
-                    <span className="flex items-center space-x-1">
-                      <span className="h-1.5 w-1.5 rounded-full bg-[#3B82F6]" />
-                      <span className="text-[#94A3B8]">VALUATION: +31.42%</span>
-                    </span>
-                    <span className="flex items-center space-x-1">
-                      <span className="h-1.5 w-1.5 rounded-full bg-[#64748B]" />
-                      <span className="text-[#94A3B8]">BENCHMARK: +12.50%</span>
-                    </span>
-                  </div>
-                </div>
-
-                {/* Sub metrics stats strip */}
-                <div className="grid grid-cols-2 gap-2 text-[9px] border-t border-white/[0.04] pt-3">
-                  <div>
-                    <span className="text-[7px] text-[#64748B] block">CUMULATIVE RETURN</span>
-                    <span className="text-[#34D399] font-bold">+31.42%</span>
-                  </div>
-                  <div>
-                    <span className="text-[7px] text-[#64748B] block">VOLATILITY</span>
-                    <span className="text-[#F8FAFC] font-bold">14.28%</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Right Panel: Trade Blotter & Console logs (Cols 10-12) */}
-              <div className="md:col-span-3 border-l border-white/[0.06] bg-black/20 p-4 space-y-4 flex flex-col justify-between overflow-y-auto">
-                <div className="space-y-4">
-                  <div className="text-[10px] text-[#64748B] border-b border-white/[0.04] pb-1 font-bold uppercase tracking-wider">EXECUTION BLOTTER</div>
-                  
-                  {/* Fills table mock */}
-                  <div className="text-[8px] space-y-2 font-mono">
-                    <div className="flex justify-between text-[#64748B] border-b border-white/[0.04] pb-0.5">
-                      <span>SYMBOL</span>
-                      <span>SIDE</span>
-                      <span>QTY</span>
-                      <span>PRICE</span>
-                    </div>
-                    <div className="flex justify-between text-[#F8FAFC]">
-                      <span>AMD</span>
-                      <span className="text-[#34D399] font-bold">BUY</span>
-                      <span>150</span>
-                      <span>$165.20</span>
-                    </div>
-                    <div className="flex justify-between text-[#F8FAFC]">
-                      <span>AMD</span>
-                      <span className="text-[#34D399] font-bold">BUY</span>
-                      <span>200</span>
-                      <span>$168.40</span>
-                    </div>
-                    <div className="flex justify-between text-[#F8FAFC]">
-                      <span>AMD</span>
-                      <span className="text-rose-500 font-bold">SELL</span>
-                      <span>350</span>
-                      <span>$184.10</span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="space-y-2 border-t border-white/[0.04] pt-3">
-                  <div className="text-[8px] text-[#64748B] uppercase tracking-wider font-bold">System Status</div>
-                  <div className="flex items-center justify-between text-[8px] text-[#94A3B8]">
-                    <span>126 passing tests</span>
-                    <span className="text-[#34D399] font-bold">✓ 100% OK</span>
-                  </div>
-                </div>
-              </div>
+            {/* Real high-fidelity terminal screenshot */}
+            <div className="relative w-full overflow-hidden border-t border-white/[0.06] bg-[#030712]">
+              <img
+                src="/assets/Screenshot-1.jpg"
+                alt="Strategy Research Terminal Workspace"
+                className="w-full h-auto object-cover opacity-90 transition-opacity duration-300 hover:opacity-100"
+              />
             </div>
+
           </div>
         </div>
       </section>
