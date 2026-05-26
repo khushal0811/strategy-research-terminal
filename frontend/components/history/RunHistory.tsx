@@ -201,8 +201,6 @@ export default function RunHistory() {
                 >
                   <span className="text-[7px] font-bold text-rose-950 opacity-0 group-hover/btn:opacity-100 transition-opacity">✕</span>
                 </button>
-                <div className="w-3 h-3 rounded-full bg-amber-500 opacity-60"></div>
-                <div className="w-3 h-3 rounded-full bg-emerald-500 opacity-60"></div>
               </div>
 
               {/* Title */}
