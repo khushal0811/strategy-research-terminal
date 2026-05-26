@@ -29,6 +29,9 @@ async def register(req: RegisterRequest, db: AsyncSession = Depends(get_db)):
         username=req.username,
         email=req.email,
         password=hash_password(req.password),
+        commission_model=req.commission_model,
+        commission_value=req.commission_value,
+        slippage_bps=req.slippage_bps,
     )
     db.add(user)
     await db.commit()

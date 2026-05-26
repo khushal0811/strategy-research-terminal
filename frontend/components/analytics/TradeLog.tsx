@@ -36,8 +36,9 @@ export default function TradeLog() {
             <tbody>
               {sortedTrades.map((trade, idx) => {
                 const isBuy = trade.side === 'BUY'
-                // Format timestamp as "MMM DD" (e.g. "Mar 12")
+                // Format timestamp as "MMM DD, YYYY" (e.g. "Mar 12, 2026")
                 const dateStr = new Date(trade.timestamp).toLocaleDateString(undefined, {
+                  year: 'numeric',
                   month: 'short',
                   day: 'numeric',
                 })

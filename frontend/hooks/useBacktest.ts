@@ -1,4 +1,5 @@
 import { SymbolInfoResponse } from '@/types'
+import { useAuthStore } from '@/store/authStore'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000'
 
@@ -91,9 +92,17 @@ export function buildBacktestPayload(storeState: {
  * Returns the run_id on success, or throws an error with backend validation details.
  */
 export async function launchBacktest(payload: BacktestPayload): Promise<string> {
+  const token = useAuthStore.getState().accessToken
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+  }
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`
+  }
+
   const res = await fetch(`${API_URL}/api/backtest/run`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers,
     body: JSON.stringify(payload),
   })
 

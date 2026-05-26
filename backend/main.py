@@ -14,6 +14,8 @@ Routes:
 
 # config.py import MUST come first — adds engine and pipeline to sys.path
 import config  # noqa: F401
+import os
+from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
@@ -25,16 +27,30 @@ from db.database import create_tables
 from auth.router import router as auth_router
 from runs.router import router as runs_router
 
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Modern lifespan handler — replaces deprecated @app.on_event('startup')."""
+    await create_tables()
+    yield
+
+
+# CORS origins — configurable via env var for production lockdown.
+# Default '*' is dev-only; production should set e.g. "https://app.example.com"
+_cors_origins_raw = os.environ.get("CORS_ORIGINS", "*")
+CORS_ORIGINS = [o.strip() for o in _cors_origins_raw.split(",")]
+
 app = FastAPI(
     title="Strategy Research Terminal",
     description="FastAPI backend for the AI-assisted quantitative research platform.",
     version="1.0.0",
+    lifespan=lifespan,
 )
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=False,
+    allow_origins=CORS_ORIGINS,
+    allow_credentials=CORS_ORIGINS != ["*"],  # True when origins are pinned
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -42,11 +58,6 @@ app.add_middleware(
 app.include_router(router, prefix="/api")
 app.include_router(auth_router)           # /auth/register, /auth/login etc.
 app.include_router(runs_router, prefix="/api")  # /api/runs/
-
-
-@app.on_event("startup")
-async def startup():
-    await create_tables()
 
 
 @app.get("/health", tags=["health"])

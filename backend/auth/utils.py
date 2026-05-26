@@ -1,5 +1,6 @@
 import bcrypt
-from datetime import datetime, timedelta
+import warnings
+from datetime import datetime, timedelta, timezone
 from typing import Optional
 from jose import JWTError, jwt
 from fastapi import Depends, HTTPException, status
@@ -11,7 +12,15 @@ from db.models import User
 import os
 import uuid
 
-SECRET_KEY = os.environ.get("JWT_SECRET_KEY", "change-this-in-production-min-32-chars")
+_DEFAULT_SECRET = "change-this-in-production-min-32-chars"
+SECRET_KEY = os.environ.get("JWT_SECRET_KEY", _DEFAULT_SECRET)
+if SECRET_KEY == _DEFAULT_SECRET or SECRET_KEY == "your-secret-key-minimum-32-characters-here":
+    warnings.warn(
+        "\n⚠️  JWT_SECRET_KEY is set to a placeholder value!\n"
+        "   Anyone can forge auth tokens. Generate a real secret:\n"
+        '   python -c "import secrets; print(secrets.token_urlsafe(64))"\n',
+        stacklevel=2,
+    )
 ALGORITHM  = "HS256"
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
@@ -26,7 +35,7 @@ def verify_password(plain: str, hashed: str) -> bool:
 
 
 def create_token(user_id: str, expires_minutes: int) -> str:
-    expire = datetime.utcnow() + timedelta(minutes=expires_minutes)
+    expire = datetime.now(timezone.utc) + timedelta(minutes=expires_minutes)
     return jwt.encode({"sub": user_id, "exp": expire}, SECRET_KEY, algorithm=ALGORITHM)
 
 

@@ -36,3 +36,4 @@ class RunDetail(RunListItem):
     alpha: Optional[float]
     equity_curve: Optional[Any]
     ai_report: Optional[str]
+    trades: Optional[Any]

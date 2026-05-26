@@ -81,6 +81,18 @@ export default function RunHistory() {
         })
       }
       
+      if (run.trades) {
+        run.trades.forEach((trade: any) => {
+          store.appendTrade({
+            symbol: trade.symbol,
+            side: trade.side,
+            quantity: trade.quantity,
+            fill_price: trade.fill_price,
+            timestamp: trade.timestamp,
+          })
+        })
+      }
+
       if (run.ai_report) {
         store.setReport(run.ai_report)
       }

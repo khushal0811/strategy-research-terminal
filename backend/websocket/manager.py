@@ -160,7 +160,7 @@ async def run_and_stream(
         user_id   : Optional authenticated user ID.
     """
     queue: asyncio.Queue = asyncio.Queue()
-    loop  = asyncio.get_event_loop()
+    loop  = asyncio.get_running_loop()
 
     # threading.Event — NOT asyncio.Event — because emit() is called from a
     # thread pool worker. threading.Event.is_set() and .set() are thread-safe.
@@ -168,6 +168,7 @@ async def run_and_stream(
     
     # Store equity curve data points
     equity_curve = []
+    trades = []
 
     # ------------------------------------------------------------------
     # emit() — the engine's callback, called synchronously from thread pool
@@ -206,6 +207,14 @@ async def run_and_stream(
                         "timestamp": message.get("timestamp"),
                         "equity": message.get("equity")
                     })
+                elif message.get("type") == "trade":
+                    trades.append({
+                        "symbol": message.get("symbol"),
+                        "side": message.get("side"),
+                        "quantity": message.get("quantity"),
+                        "fill_price": message.get("fill_price"),
+                        "timestamp": message.get("timestamp")
+                    })
                 
                 await websocket.send_json(message)
 
@@ -239,6 +248,7 @@ async def run_and_stream(
                                         benchmark_symbol= req.benchmark_symbol,
                                         status          = "complete",
                                         equity_curve    = equity_curve,
+                                        trades          = trades,
                                         total_return    = metrics.get("total_return"),
                                         price_return    = metrics.get("price_return"),
                                         cagr            = metrics.get("cagr"),

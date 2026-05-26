@@ -32,7 +32,7 @@ export default function RunHistoryRow({ run, onLoad, onDelete, isDeleting }: Run
   const formatDate = (dateStr: string) => {
     try {
       const date = new Date(dateStr)
-      return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+      return date.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
     } catch {
       return dateStr
     }

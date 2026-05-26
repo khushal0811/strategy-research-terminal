@@ -56,7 +56,7 @@ export default function EquityCurve() {
     
   const alphaVal = metrics && metrics.alpha !== null ? metrics.alpha : 0
   const alphaStr = metrics && metrics.alpha !== null 
-    ? `${metrics.alpha >= 0 ? '+' : ''}${metrics.alpha.toFixed(2)}%`
+    ? `${metrics.alpha * 100 >= 0 ? '+' : ''}${(metrics.alpha * 100).toFixed(2)}%`
     : '—'
 
   // Format data for Recharts
@@ -87,6 +87,7 @@ export default function EquityCurve() {
 
     return {
       date: new Date(point.timestamp).toLocaleDateString(undefined, {
+        year: 'numeric',
         month: 'short',
         day: 'numeric',
       }),

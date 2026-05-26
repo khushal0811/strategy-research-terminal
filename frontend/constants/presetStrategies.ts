@@ -52,7 +52,7 @@ export const PRESET_STRATEGIES = {
     description: 'Buy breakout after low-volatility squeeze',
     defaultConfig: {
       type: 'bollinger_bands',
-      parameters: { window: 20, num_std: 2.0, squeeze_factor: 0.02 },
+      parameters: { window: 20, num_std: 2.0, squeeze_factor: 0.10 },
     },
   },
   dual_momentum: {

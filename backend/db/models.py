@@ -1,8 +1,14 @@
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from sqlalchemy import Column, String, Float, Integer, Boolean, DateTime, Date, JSON, Text, ForeignKey
 from sqlalchemy.dialects.postgresql import UUID, ARRAY
 from db.database import Base
+
+
+def _utc_now():
+    """Timezone-aware UTC now — replaces deprecated datetime.utcnow()."""
+    return datetime.now(timezone.utc)
+
 
 class User(Base):
     __tablename__ = "users"
@@ -11,7 +17,7 @@ class User(Base):
     username   = Column(String(50), unique=True, nullable=False, index=True)
     email      = Column(String(255), unique=True, nullable=False)
     password   = Column(String(255), nullable=False)   # bcrypt hash
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime(timezone=True), default=_utc_now)
     is_active  = Column(Boolean, default=True)
 
     # Transaction cost settings — stored per user, applied to every backtest
@@ -25,7 +31,7 @@ class BacktestRun(Base):
 
     id             = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     user_id        = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
-    created_at     = Column(DateTime, default=datetime.utcnow)
+    created_at     = Column(DateTime(timezone=True), default=_utc_now)
 
     # Config snapshot
     symbols        = Column(ARRAY(String), nullable=False)
@@ -56,6 +62,9 @@ class BacktestRun(Base):
 
     # Full equity curve as JSON array of {timestamp, equity} objects
     equity_curve   = Column(JSON, nullable=True)
+
+    # Full list of trades as JSON array of {symbol, side, quantity, fill_price, timestamp}
+    trades         = Column(JSON, nullable=True)
 
     # AI report markdown
     ai_report      = Column(Text, nullable=True)

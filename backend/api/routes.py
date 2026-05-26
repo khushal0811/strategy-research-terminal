@@ -217,4 +217,6 @@ def get_run_config(run_id: str) -> BacktestRequestSchema:
             status_code=404,
             detail=f"Run '{run_id}' not found. POST /api/backtest/run first.",
         )
-    return _run_registry[run_id]
+    # Pop instead of get — each run_id is consumed exactly once by the WS handler.
+    # This prevents unbounded memory growth in long-running production deployments.
+    return _run_registry.pop(run_id)

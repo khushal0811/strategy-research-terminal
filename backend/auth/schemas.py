@@ -6,6 +6,9 @@ class RegisterRequest(BaseModel):
     username: str
     email: str
     password: str
+    commission_model: str = "flat"     # optional — default to flat
+    commission_value: float = 0.0      # optional — default to $0
+    slippage_bps: float = 0.0          # optional — default to 0 bps
 
 class LoginRequest(BaseModel):
     username: str

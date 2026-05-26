@@ -13,7 +13,14 @@ if raw_url:
 else:
     DATABASE_URL = "postgresql+asyncpg://postgres:postgres@localhost:5432/strategy_terminal"
 
-engine = create_async_engine(DATABASE_URL, echo=False)
+engine = create_async_engine(
+    DATABASE_URL,
+    echo=False,
+    pool_size=10,
+    max_overflow=20,
+    pool_recycle=3600,    # recycle connections after 1 hour to avoid stale connections
+    pool_pre_ping=True,   # validate connections before use (handles PG idle timeouts)
+)
 
 AsyncSessionLocal = sessionmaker(
     bind=engine,
