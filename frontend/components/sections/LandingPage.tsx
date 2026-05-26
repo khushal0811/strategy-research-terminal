@@ -225,45 +225,17 @@ export default function LandingPage({ onLaunch }: LandingPageProps) {
 
       {/* ─── HOW IT WORKS ─── */}
       <section className="px-6 py-24">
-        <div className="max-w-6xl mx-auto space-y-16">
+        <div className="max-w-6xl mx-auto space-y-12">
           <div className="text-center space-y-4">
             <p className="text-[11px] font-mono font-bold uppercase tracking-[0.2em] text-primary">
-              How It Works
+              SYSTEM WORKFLOW
             </p>
             <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-foreground">
-              From prompt to portfolio metrics in seconds
+              Real-Time Ingestion & Execution Flowcharts
             </h2>
-            <p className="text-sm text-muted-foreground max-w-xl mx-auto leading-relaxed">
-              Your natural language prompt flows through four independent, observable systems.
+            <p className="text-sm text-muted-foreground max-w-xl mx-auto leading-relaxed font-sans">
+              Trace how your strategy configurations execute deterministically across our client, server, and local database cache layers.
             </p>
-          </div>
-
-          {/* Steps */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            <StepCard
-              step="01"
-              title="Describe"
-              description="Type your strategy in plain English or select a preset. The LLM resolves it to a structured configuration."
-              accent="border-t-primary"
-            />
-            <StepCard
-              step="02"
-              title="Fetch"
-              description="The pipeline pulls fresh OHLCV + dividend data from Yahoo Finance, normalizes it, and stores it as Parquet."
-              accent="border-t-amber-500"
-            />
-            <StepCard
-              step="03"
-              title="Simulate"
-              description="The event-driven engine processes each bar deterministically — strategy → signal → order → fill → portfolio."
-              accent="border-t-emerald-500"
-            />
-            <StepCard
-              step="04"
-              title="Stream"
-              description="Results stream live via WebSocket — equity curve, trade fills, dividends, and final metrics appear in real time."
-              accent="border-t-violet-500"
-            />
           </div>
 
           {/* Architecture panel */}
@@ -275,19 +247,17 @@ export default function LandingPage({ onLaunch }: LandingPageProps) {
       <section className="px-6 py-24 bg-card/30">
         <div className="max-w-3xl mx-auto text-center space-y-8">
           <p className="text-[11px] font-mono font-bold uppercase tracking-[0.2em] text-primary">
-            Built By
+            ENGINEERING & AUTHORSHIP
           </p>
           <div className="space-y-4">
             <h2 className="text-3xl font-extrabold tracking-tight text-foreground">
               Khushal Arora
             </h2>
-            <p className="text-sm font-medium text-primary">
-              Software Developer
+            <p className="text-sm font-semibold text-primary uppercase tracking-wider font-mono">
+              Systems Architect & Quantitative Developer
             </p>
-            <p className="text-sm text-muted-foreground max-w-lg mx-auto leading-relaxed">
-              Built as a portfolio project to explore event-driven architecture, real-time streaming
-              systems, quantitative finance, and full-stack system design — from data pipeline to
-              production deployment.
+            <p className="text-sm text-muted-foreground max-w-xl mx-auto leading-relaxed font-sans">
+              Strategy Research Terminal is an institutional-grade, open-source quantitative platform. It was engineered to demonstrate high-performance event-driven simulation loop designs, asynchronous real-time binary serialization over WebSockets, Snappy-compressed columnar Parquet data caching, and robust automated test coverage.
             </p>
           </div>
 
@@ -390,32 +360,6 @@ function FeatureCard({
         <span className={iconColor}>{icon}</span>
       </div>
       <h3 className="text-sm font-bold tracking-wide text-foreground">{title}</h3>
-      <p className="text-xs text-muted-foreground leading-relaxed">{description}</p>
-    </div>
-  )
-}
-
-/* ── Step Card ── */
-function StepCard({
-  step,
-  title,
-  description,
-  accent,
-}: {
-  step: string
-  title: string
-  description: string
-  accent: string
-}) {
-  return (
-    <div className={`border border-border ${accent} border-t-2 bg-card/65 rounded-lg p-5 space-y-3
-                     transition-all duration-300 hover:bg-card/90`}>
-      <div className="flex items-center justify-between">
-        <h3 className="text-sm font-bold text-foreground">{title}</h3>
-        <span className="text-[9px] font-mono font-bold text-muted-foreground/50 border border-border/60 bg-muted/20 px-1.5 py-0.5 rounded">
-          {step}
-        </span>
-      </div>
       <p className="text-xs text-muted-foreground leading-relaxed">{description}</p>
     </div>
   )
