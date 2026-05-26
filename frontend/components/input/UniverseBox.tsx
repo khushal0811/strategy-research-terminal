@@ -33,8 +33,8 @@ export default function UniverseBox() {
     setUniverseMode(value as UniverseMode)
   }
 
-  // Check symbol metadata via the API
-  const checkSymbol = async (symbol: string) => {
+  // Check symbol metadata via the API with robust retry support to handle Render cold-starts
+  const checkSymbol = async (symbol: string, retries = 3) => {
     // Retain only valid ticker characters (A-Z, 0-9, dot, hyphen) and strip BOMs/zero-width spaces
     const cleanSymbol = symbol.replace(/[^A-Za-z0-9.-]/g, '').trim().toUpperCase()
     if (!cleanSymbol) return
@@ -54,14 +54,32 @@ export default function UniverseBox() {
     // Add with loading state
     addSymbol({ symbol: cleanSymbol, status: 'loading' })
 
-    try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000'
-      const response = await fetch(`${apiUrl}/api/data/info/${cleanSymbol}`)
-      if (!response.ok) {
-        throw new Error('API request failed')
-      }
-      const data = await response.json()
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000'
+    let attempt = 0
+    let success = false
+    let data: any = null
 
+    while (attempt < retries && !success) {
+      try {
+        const response = await fetch(`${apiUrl}/api/data/info/${cleanSymbol}`)
+        if (response.ok) {
+          data = await response.json()
+          success = true
+        } else {
+          attempt++
+          if (attempt < retries) {
+            await new Promise((resolve) => setTimeout(resolve, 1500)) // Wait 1.5s before retry
+          }
+        }
+      } catch (error) {
+        attempt++
+        if (attempt < retries) {
+          await new Promise((resolve) => setTimeout(resolve, 1500))
+        }
+      }
+    }
+
+    if (success && data) {
       if (data.exists) {
         // Data is always re-fetched fresh from yfinance at run-time,
         // so the cached file dates are irrelevant — mark as ok.
@@ -78,8 +96,8 @@ export default function UniverseBox() {
         updateSymbol(cleanSymbol, { status: 'error' })
         toast.error(`Ticker ${cleanSymbol} not found.`)
       }
-    } catch (error) {
-      console.error(`Error validating ticker ${cleanSymbol}:`, error)
+    } else {
+      console.error(`Error validating ticker ${cleanSymbol} after ${retries} attempts.`)
       updateSymbol(cleanSymbol, { status: 'error' })
       toast.error(`Could not validate ticker ${cleanSymbol}.`)
     }
