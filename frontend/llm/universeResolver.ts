@@ -41,7 +41,7 @@ export async function resolveUniverse(
 
     // Capitalize and sanitize symbols
     return parsed.symbols
-      .map((s) => s.trim().toUpperCase())
+      .map((s) => s.replace(/[^A-Za-z0-9.-]/g, '').trim().toUpperCase())
       .filter((s) => s.length > 0)
       .slice(0, 20) // Enforce max 20 symbols limit
   } catch (err) {

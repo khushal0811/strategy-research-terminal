@@ -35,7 +35,8 @@ export default function UniverseBox() {
 
   // Check symbol metadata via the API
   const checkSymbol = async (symbol: string) => {
-    const cleanSymbol = symbol.trim().toUpperCase()
+    // Retain only valid ticker characters (A-Z, 0-9, dot, hyphen) and strip BOMs/zero-width spaces
+    const cleanSymbol = symbol.replace(/[^A-Za-z0-9.-]/g, '').trim().toUpperCase()
     if (!cleanSymbol) return
 
     // Universe limit check
