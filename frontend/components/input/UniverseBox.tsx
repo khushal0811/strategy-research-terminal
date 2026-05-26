@@ -94,14 +94,27 @@ export default function UniverseBox() {
     setIsResolving(true)
     try {
       const provider = new GroqProvider(llmApiKey)
-      const resolvedSymbols = await resolveUniverse(universeInput, provider)
+      let resolvedSymbols = await resolveUniverse(universeInput, provider)
 
       if (resolvedSymbols.length === 0) {
         toast.info('No symbols resolved for this description.')
         return
       }
 
-      toast.success(`Resolved ${resolvedSymbols.length} tickers. Validating...`)
+      let wasCapped = false
+      if (resolvedSymbols.length > 20) {
+        resolvedSymbols = resolvedSymbols.slice(0, 20)
+        wasCapped = true
+      }
+
+      if (wasCapped) {
+        toast.warning(
+          'AI universe resolution is capped at 20 assets per query to ensure high resolution quality. Only the first 20 assets have been added.',
+          { duration: 6000 }
+        )
+      } else {
+        toast.success(`Resolved ${resolvedSymbols.length} tickers. Validating...`)
+      }
 
       // Sequentially validate each symbol
       for (const sym of resolvedSymbols) {
@@ -190,6 +203,9 @@ export default function UniverseBox() {
                 value={universeInput}
                 onChange={(e) => setUniverseInput(e.target.value)}
               />
+              <p className="text-[9px] text-yellow-500/90 font-mono leading-normal mt-1 border border-yellow-500/20 bg-yellow-500/5 p-1.5 rounded select-none">
+                ⚠️ AI universe resolution is capped at 20 assets per query to ensure high resolution quality. To build a larger universe (up to 100), you can resolve multiple AI queries sequentially or add tickers manually under &quot;Manual Tickers&quot;.
+              </p>
             </div>
             <div className="flex justify-end pt-1">
               <Button
