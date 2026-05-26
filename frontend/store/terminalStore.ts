@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 
-export type RunStatus = 'idle' | 'resolving' | 'validating' | 'running' | 'complete' | 'error'
+export type RunStatus = 'idle' | 'resolving' | 'validating' | 'running' | 'paused' | 'complete' | 'error'
 export type Interval = '1d' | '1h' | '30m' | '15m' | '5m' | '2m' | '1m'
 export type StrategyMode = 'nl' | 'python'
 export type UniverseMode = 'nl' | 'tickers'
@@ -74,6 +74,7 @@ interface TerminalState {
   status: RunStatus
   progress: number
   errorMessage: string | null
+  wsRef: WebSocket | null
 
   // Live results
   equityCurve: EquityPoint[]
@@ -117,10 +118,14 @@ interface TerminalState {
   setStopFraction: (v: number) => void
   setBenchmarkSymbol: (v: string) => void
   setIncludeDividends: (v: boolean) => void
+  setWsRef: (ws: WebSocket | null) => void
+  pauseRun: () => void
+  resumeRun: () => void
+  stopRun: () => void
   resetRun: () => void
 }
 
-export const useTerminalStore = create<TerminalState>((set) => ({
+export const useTerminalStore = create<TerminalState>((set, get) => ({
   strategyInput: '',
   strategyMode: 'nl',
   strategyConfig: null,
@@ -144,6 +149,7 @@ export const useTerminalStore = create<TerminalState>((set) => ({
   status: 'idle',
   progress: 0,
   errorMessage: null,
+  wsRef: null,
   equityCurve: [],
   trades: [],
   dividendEvents: [],
@@ -190,9 +196,51 @@ export const useTerminalStore = create<TerminalState>((set) => ({
   setMetrics: (m) => set({ metrics: m }),
   setReport: (r) => set({ report: r }),
   setError: (msg) => set({ status: 'error', errorMessage: msg }),
+  setWsRef: (ws) => set({ wsRef: ws }),
+  pauseRun: () => {
+    const ws = get().wsRef
+    if (ws && ws.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify({ action: 'pause' }))
+      set({ status: 'paused' })
+    }
+  },
+  resumeRun: () => {
+    const ws = get().wsRef
+    if (ws && ws.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify({ action: 'resume' }))
+      set({ status: 'running' })
+    }
+  },
+  stopRun: () => {
+    const ws = get().wsRef
+    if (ws) {
+      if (ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({ action: 'stop' }))
+      }
+      try {
+        ws.close()
+      } catch (err) {
+        // swallow
+      }
+    }
+    set({
+      runId: null,
+      dbRunId: null,
+      status: 'idle',
+      progress: 0,
+      errorMessage: null,
+      equityCurve: [],
+      trades: [],
+      dividendEvents: [],
+      currentEquity: 0,
+      metrics: null,
+      report: null,
+      wsRef: null
+    })
+  },
   resetRun: () => set({
     runId: null, dbRunId: null, status: 'idle', progress: 0, errorMessage: null,
     equityCurve: [], trades: [], dividendEvents: [], currentEquity: 0,
-    metrics: null, report: null,
+    metrics: null, report: null, wsRef: null
   }),
 }))

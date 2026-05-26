@@ -26,3 +26,4 @@ export type WsMessage =
   | { type: 'dividend'; symbol: string; dividend_per_share: number; timestamp: string }
   | { type: 'complete'; metrics: import('../store/terminalStore').BacktestMetrics; db_run_id?: string | null }
   | { type: 'error'; message: string }
+  | { type: 'status_update'; status: 'paused' | 'running' }

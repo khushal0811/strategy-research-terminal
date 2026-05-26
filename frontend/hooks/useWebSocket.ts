@@ -15,6 +15,7 @@ interface TerminalStoreActions {
   setDbRunId: (id: string | null) => void
   setStatus: (s: any) => void
   setError: (msg: string) => void
+  setWsRef: (ws: WebSocket | null) => void
 }
 
 /**
@@ -27,6 +28,9 @@ export function connectBacktest(runId: string, store: TerminalStoreActions): Web
     ? `${WS_URL}/ws/backtest/${runId}?token=${token}`
     : `${WS_URL}/ws/backtest/${runId}`
   const ws = new WebSocket(wsUrl)
+
+  // Store active WebSocket reference in Zustand
+  store.setWsRef(ws)
 
   ws.onmessage = (event) => {
     try {
@@ -63,6 +67,11 @@ export function connectBacktest(runId: string, store: TerminalStoreActions): Web
       } else if (msg.type === 'error') {
         store.setError(msg.message)
         ws.close()
+      } else if (msg.type === 'status_update') {
+        // Handle pause/resume status streamed from backend
+        if (msg.status === 'paused' || msg.status === 'running') {
+          store.setStatus(msg.status)
+        }
       }
     } catch (err) {
       console.error('Failed to parse WebSocket message:', err)
@@ -76,9 +85,12 @@ export function connectBacktest(runId: string, store: TerminalStoreActions): Web
   }
 
   ws.onclose = () => {
+    // Clear WebSocket reference on connection close
+    store.setWsRef(null)
+
     // If connection drops before completing normally, report unexpected disconnect
     const currentStatus = useTerminalStore.getState().status
-    if (currentStatus === 'running') {
+    if (currentStatus === 'running' || currentStatus === 'paused') {
       store.setError('Connection closed unexpectedly.')
     }
   }

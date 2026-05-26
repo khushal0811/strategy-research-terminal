@@ -147,24 +147,21 @@ async def run_and_stream(
     Run the backtest engine in a thread pool and stream all results live.
 
     Lifecycle:
-        1. Create asyncio.Queue and threading.Event (disconnected flag).
+        1. Create asyncio.Queue, threading.Event (disconnected flag), and paused_event.
         2. Define emit() — called from engine thread, bridges to the async queue.
+           Cooperatively blocks/sleeps if paused_event is set.
         3. Launch engine via loop.run_in_executor() — non-blocking.
-        4. Drain queue in a loop, forwarding each message to the WebSocket.
-        5. When future is done AND queue is empty → send 'complete' or 'error'.
-        6. On any disconnect/send error → set disconnected flag, exit cleanly.
-
-    Args:
-        websocket : Accepted FastAPI WebSocket connection.
-        req       : BacktestRequestSchema — the validated run config.
-        user_id   : Optional authenticated user ID.
+        4. Launch background task to listen for client WS actions (pause/resume/stop).
+        5. Drain queue in a loop, forwarding each message to the WebSocket.
+        6. When future is done AND queue is empty → send 'complete' or 'error'.
+        7. On any disconnect/send error → set disconnected flag, exit cleanly.
     """
     queue: asyncio.Queue = asyncio.Queue()
     loop  = asyncio.get_running_loop()
 
-    # threading.Event — NOT asyncio.Event — because emit() is called from a
-    # thread pool worker. threading.Event.is_set() and .set() are thread-safe.
+    # threading.Events for thread-safe cross-loop signaling
     disconnected = threading.Event()
+    paused_event = threading.Event()
     
     # Store equity curve data points
     equity_curve = []
@@ -178,11 +175,18 @@ async def run_and_stream(
         Bridge synchronous engine thread → async event loop queue.
 
         Fast-path: if client has disconnected, drop the message immediately.
-        This makes emit() a no-op for the remainder of the engine run after
-        a disconnect — no queue growth, no exceptions, no crash.
         """
         if disconnected.is_set():
             return  # deliberate no-op: client gone, engine still running
+
+        # Cooperative pausing check — block the thread if paused
+        import time
+        while paused_event.is_set() and not disconnected.is_set():
+            time.sleep(0.05)
+
+        if disconnected.is_set():
+            return
+
         # Schedule queue.put() on the event loop from this thread
         asyncio.run_coroutine_threadsafe(queue.put(message), loop)
 
@@ -192,13 +196,37 @@ async def run_and_stream(
     future = loop.run_in_executor(None, _run_engine_in_thread, req, emit, disconnected)
 
     # ------------------------------------------------------------------
+    # Background task to read incoming client control messages
+    # ------------------------------------------------------------------
+    async def read_client_messages():
+        try:
+            while not disconnected.is_set():
+                data = await websocket.receive_json()
+                action = data.get("action")
+                if action == "pause":
+                    paused_event.set()
+                    # Broadcast status update
+                    await websocket.send_json({"type": "status_update", "status": "paused"})
+                elif action == "resume":
+                    paused_event.clear()
+                    # Broadcast status update
+                    await websocket.send_json({"type": "status_update", "status": "running"})
+                elif action == "stop":
+                    disconnected.set()
+                    paused_event.clear()  # break any pausing locks
+                    break
+        except Exception:
+            pass
+
+    reader_task = asyncio.create_task(read_client_messages())
+
+    # ------------------------------------------------------------------
     # Stream loop — drain queue and forward to WebSocket
     # ------------------------------------------------------------------
     try:
         while True:
             try:
                 # Wait up to 100ms for next message.
-                # Short timeout keeps the loop responsive for engine completion.
                 message = await asyncio.wait_for(queue.get(), timeout=0.1)
                 
                 # Accumulate equity curve points if progress update
@@ -221,8 +249,6 @@ async def run_and_stream(
             except asyncio.TimeoutError:
                 # No message arrived within timeout window.
                 # Check if engine is finished AND queue is fully drained.
-                # Both must be true — the engine may have enqueued messages
-                # just before finishing that haven't been processed yet.
                 if future.done() and queue.empty():
                     result = future.result()
 
@@ -282,20 +308,9 @@ async def run_and_stream(
                     break  # normal exit — both sides done
 
     except Exception as send_error:
-        # Catches WebSocketDisconnect, ConnectionClosedError, and any send failure.
-        #
-        # DELIBERATE DECISION: set disconnected flag so emit() becomes a no-op.
-        # The engine continues to completion in the thread pool — we cannot stop it.
-        # The queue and future will be garbage collected when this coroutine exits.
-        #
-        # We do NOT call future.cancel() because:
-        #   - run_in_executor() wraps a sync function in a thread
-        #   - cancel() on the Future only prevents it from starting if not yet running
-        #   - once running, the thread cannot be interrupted from outside
         disconnected.set()
+        paused_event.clear()
 
-        # Attempt to send an error message — may fail if client is already gone.
-        # Swallow the exception either way.
         try:
             await websocket.send_json({
                 "type":    "error",
@@ -305,6 +320,10 @@ async def run_and_stream(
             pass  # client already disconnected — nothing to send
 
     finally:
-        # Always set the flag on exit regardless of how we got here.
-        # Ensures any lingering emit() calls in the engine thread are silent.
+        # Always set flags and cancel client WS reader on exit
         disconnected.set()
+        paused_event.clear()
+        try:
+            reader_task.cancel()
+        except Exception:
+            pass
