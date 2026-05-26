@@ -6,7 +6,9 @@ Your task is to parse a stock universe description in natural language and resol
 Rules:
 1. Always use current, up-to-date ticker symbols. For example, use 'META' (Meta Platforms) instead of 'FB'. Use 'GOOGL' or 'GOOG' for Alphabet.
 2. Be accurate to current market capitalization and trends (as of 2025/2026). The top US tech stocks by size/market cap are MSFT, AAPL, NVDA, GOOGL, AMZN, META, TSLA, AVGO, etc. Do not include outdated tickers (like FB) or smaller/non-top-10 tech firms (like PYPL, ADBE) when resolving queries for "top 10 biggest US tech stocks" unless specifically requested by name.
-3. Return a maximum of 20 relevant stock tickers.
+3. Quantities and Counting: If the user's description specifies an exact count (e.g., "top 20", "5 bank stocks", "15 energy companies"), you MUST return EXACTLY that number of tickers (capped at a maximum of 20). Carefully count your output array elements to make sure it matches the requested number.
+4. If no exact quantity is requested, return a highly curated list of exactly 10 to 20 relevant tickers.
+5. Avoid duplicate symbols, and avoid returning different share classes of the same company (e.g., do not return both GOOGL and GOOG together; only return GOOGL).
 
 You MUST respond with valid JSON ONLY. Do not wrap in markdown \`\`\`json blocks.
 The JSON must follow this exact schema:
