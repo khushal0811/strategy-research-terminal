@@ -16,7 +16,6 @@ import { Button } from '@/components/ui/button'
 
 export default function EquityCurve() {
   const { equityCurve, metrics, capital, currentEquity, status } = useTerminalStore()
-  const [returnType, setReturnType] = useState<'total' | 'price'>('total')
   const [isMounted, setIsMounted] = useState(false)
 
   // Prevent SSR hydration mismatch issues with Recharts
@@ -65,17 +64,6 @@ export default function EquityCurve() {
   const chartData = equityCurve.map((point, idx) => {
     let displayEquity = point.equity
 
-    // Scale price vs total return if complete and 'price' selected
-    if (metrics && returnType === 'price') {
-      const totalRet = metrics.total_return_with_dividends
-      const priceRet = metrics.price_return
-
-      if (totalRet !== 0) {
-        const scalingFactor = priceRet / totalRet
-        displayEquity = initialEquity + (point.equity - initialEquity) * scalingFactor
-      }
-    }
-
     const pctReturn = ((displayEquity - initialEquity) / initialEquity) * 100
 
     let benchmarkVal = undefined
@@ -117,27 +105,6 @@ export default function EquityCurve() {
                 <span className="h-1 w-1 rounded-full bg-emerald-500" />
                 <span>● LIVE</span>
               </span>
-            )}
-            
-            {hasData && (
-              <div className="flex bg-muted/80 border border-border/80 p-0.5 rounded text-[9px] font-semibold space-x-0.5">
-                <Button
-                  variant={returnType === 'total' ? 'secondary' : 'ghost'}
-                  size="sm"
-                  className="h-5 text-[9px] px-2 font-bold uppercase tracking-wider cursor-pointer"
-                  onClick={() => setReturnType('total')}
-                >
-                  Total Return
-                </Button>
-                <Button
-                  variant={returnType === 'price' ? 'secondary' : 'ghost'}
-                  size="sm"
-                  className="h-5 text-[9px] px-2 font-bold uppercase tracking-wider cursor-pointer"
-                  onClick={() => setReturnType('price')}
-                >
-                  Price Return
-                </Button>
-              </div>
             )}
           </div>
         </div>
