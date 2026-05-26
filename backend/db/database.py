@@ -37,3 +37,12 @@ async def get_db():
 async def create_tables():
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+    
+    # Self-healing migration: Automatically add the 'trades' column if it's missing in older DB tables
+    from sqlalchemy import text
+    try:
+        async with engine.begin() as conn:
+            await conn.execute(text("ALTER TABLE backtest_runs ADD COLUMN IF NOT EXISTS trades JSON;"))
+    except Exception as e:
+        # Log gracefully if the DB doesn't support IF NOT EXISTS or other issues
+        print(f"Auto-migration warning: {e}")
