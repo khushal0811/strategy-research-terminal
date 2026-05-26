@@ -1,184 +1,180 @@
 # Strategy Research Terminal
 
-A real-time quantitative research platform that connects a Next.js frontend to an event-driven backtesting engine via FastAPI and WebSocket streaming. Users configure strategy parameters, select stock universes, and watch live equity curves, trade executions, and performance metrics render in real time.
+**The web application and API interface for the Strategy Research Platform. It integrates a Next.js frontend and a FastAPI backend with PostgreSQL persistence, JWT user authentication, real-time WebSocket streaming, and LLM-assisted strategy analysis.**
 
-Built as the user-facing interface layer for the [Event-Driven Backtesting Engine](https://github.com/khushal0811/Event-Driven-Backtesting-Engine) and [Market Data Pipeline](https://github.com/khushal0811/Backtester-Oriented-Market-Data-Pipeline).
+Part of the three-component Strategy Research Platform:
+- [Market Data Pipeline](file:///Users/khushalarora/Documents/Career/Trading-System-Workspace/market-data-pipeline/Backtester-Oriented-Market-Data-Pipeline) — Data ingestion & storage
+- [Event-Driven Backtesting Engine](file:///Users/khushalarora/Documents/Career/Trading-System-Workspace/market-data-pipeline/Event-Driven-Backtesting-Engine) — Core event simulation engine
+- **Strategy Research Terminal** — Full-stack UI & REST/WS APIs (this component)
 
 ---
 
-## Architecture
+## Technical Architecture
+
+The terminal connects the user interface to the backtesting engine and manages persistence and authentication:
 
 ```
-┌──────────────────────────────────────────────────────┐
-│                   Next.js Frontend                   │
-│  ┌──────────┐  ┌───────────┐  ┌───────────────────┐  │
-│  │ Strategy │  │  Universe │  │   Live Dashboard  │  │
-│  │   Input  │  │  Selector │  │  (Charts, Trades, │  │
-│  │  (NL/Py) │  │ (NL/Chips)│  │   Metrics, AI)    │  │
-│  └────┬─────┘  └─────┬─────┘  └────────┬──────────┘  │
-│       │              │                  │            │
-│       ▼              ▼                  ▲            │
-│  ┌─────────┐   ┌──────────┐    ┌───────┴────────┐    │
-│  │  Groq   │   │ POST /api│    │ WS /ws/backtest│    │
-│  │  LLM    │   │ /backtest│    │   /{run_id}    │    │
-│  │ Resolver│   │  /run    │    └───────┬────────┘    │
-│  └─────────┘   └────┬─────┘           │              │
-└──────────────────────┼─────────────────┼─────────────┘
-                       │                 │
-                       ▼                 ▲
-┌──────────────────────┴─────────────────┴──────────────┐
-│                  FastAPI Backend                      │
-│  ┌────────────┐  ┌──────────────┐  ┌───────────────┐  │
-│  │  Pydantic  │  │   Config     │  │   WebSocket   │  │
-│  │  Schema    │→ │  Validator   │→ │    Manager    │  │
-│  │ Validation │  │ (Biz Logic)  │  │ (Thread→Queue)│  │
-│  └────────────┘  └──────────────┘  └───────┬───────┘  │
-│                                            │          │
-│  ┌────────────┐                    ┌───────▼───────┐  │
-│  │  Pipeline  │ ← yfinance ←─────  │  run_backtest │  │
-│  │  Fetcher   │                    │ _from_config  │  │
-│  └────────────┘                    └───────────────┘  │
-└───────────────────────────────────────────────────────┘
+                  ┌──────────────────────────────┐
+                  │       Next.js Frontend       │
+                  │   (React 19 / TypeScript)    │
+                  └──────────────┬───────────────┘
+                                 │
+             HTTP Requests       │       WebSocket Connection
+          (JWT Auth Headers)     │       (Real-time Streams)
+                                 ▼
+                  ┌──────────────────────────────┐
+                  │       FastAPI Backend        │
+                  │       (REST & WS APIs)       │
+                  └──────────────┬───────────────┘
+                                 │
+             SQLAlchemy          │       Engine Thread Pool
+             (Asyncpg)           │       (Queued Forwarding)
+                                 ▼
+   ┌───────────────────┐  ┌──────────────┐  ┌──────────────────┐
+   │    PostgreSQL     │  │  yfinance    │  │  Backtesting     │
+   │ (Runs/Trades/User)│  │ (On-demand)  │  │  Engine Sub-repo │
+   └───────────────────┘  └──────────────┘  └──────────────────┘
 ```
 
 ---
 
-## Features
+## Core Features
 
-- **Natural Language Strategy Input** — Describe a strategy in plain English; Groq LLM maps it to one of 10 built-in preset strategies with tuned parameters
-- **Custom Python Strategies** — Write strategy code directly in the browser editor
-- **Ticker Validation** — Real-time yfinance validation when adding tickers, with green/red chip feedback
-- **Live Streaming** — Equity curve, trade fills, and dividend events stream in real time via WebSocket
-- **Performance Analytics** — Total return, CAGR, Sharpe ratio, max drawdown, volatility, win rate, alpha vs benchmark
-- **AI-Generated Reports** — Post-backtest analysis summaries via Groq LLM
-- **Dark/Light Mode** — Full theme support with system-aware defaults
+* **JWT User Authentication**: Secure login (`POST /auth/login`), registration (`POST /auth/register`), and token-based route authorization.
+* **Persistent User Profiles & Transaction Costs**: Saves custom execution metrics per user account. When launching a backtest, user profile parameters (commission model type, fee values, and basis point slippage constraints) are retrieved and injected into the engine.
+* **PostgreSQL Session Persistence**: Simulating backtests persists the complete execution profile, portfolio metrics, AI-generated reports, and the full round-trip trade history in the database.
+* **Historical Run Restoration**: Restores past runs from the Run History side panel. Hydrating a run loads the complete historical record, re-drawing charts and populating the **Execution Blotter** with exact entries and exits.
+* **Real-time Streaming Pipeline**: A custom asyncio queue bridge monitors execution threads, converting backtest snapshots into WebSocket events to update progress bars, trade logs, and charts bar-by-bar.
+* **Aesthetic and Precision Upgrades**:
+  * Date labels display the full date including the year (e.g. `2024-03-12`) rather than truncated month-day indices.
+  * Quantitative calculations (like Alpha relative to the benchmark index) are correctly scaled (multiplied by 100) before rendering as percentages in metrics cards.
 
 ---
 
-## Project Structure
+## Repository Layout
 
 ```
 strategy-research-terminal/
 ├── backend/
-│   ├── main.py                    # FastAPI app entry point
-│   ├── config.py                  # Environment config + sys.path setup
+│   ├── main.py                 # FastAPI setup and WebSocket router
+│   ├── config.py               # Path configurations & env safety checks
 │   ├── api/
-│   │   ├── routes.py              # REST endpoints (data info, backtest launch)
-│   │   └── schemas.py             # Pydantic request/response models
+│   │   ├── routes.py           # REST routes (data query & backtest launch)
+│   │   └── schemas.py          # Request and response schemas (Pydantic)
+│   ├── auth/
+│   │   ├── router.py           # Login, registration, & user profiles
+│   │   ├── schemas.py          # Authentication contracts
+│   │   └── utils.py            # Password hashing & JWT token verification
+│   ├── db/
+│   │   ├── database.py         # SQLAlchemy engine & async session pools
+│   │   └── models.py           # User & BacktestRun relational tables
+│   ├── runs/
+│   │   ├── router.py           # Run retrieval, deletion, and patch routes
+│   │   └── schemas.py          # Persistence serialization schemas
 │   ├── pipeline/
-│   │   └── fetcher.py             # On-demand yfinance data fetching bridge
+│   │   └── fetcher.py          # Downloads missing symbols at runtime
 │   ├── validation/
-│   │   └── config_validator.py    # Pre-engine business logic validation
-│   ├── websocket/
-│   │   └── manager.py             # Thread→async queue bridge for live streaming
-│   ├── test_e2e.py                # End-to-end verification script
-│   ├── requirements.txt           # Python dependencies
-│   └── .env                       # Environment variables (not committed)
-├── frontend/
-│   ├── app/
-│   │   ├── page.tsx               # Main dashboard layout
-│   │   ├── layout.tsx             # Root layout + fonts
-│   │   └── api/llm/route.ts       # Server-side LLM proxy
-│   ├── components/
-│   │   ├── input/                 # Strategy, Universe, DateRange, Interval, SimParams, RunButton
-│   │   ├── charts/                # EquityCurve, DrawdownChart, RollingSharpeChart
-│   │   ├── analytics/             # MetricsPanel, TradeLog, UniverseNotes
-│   │   ├── sections/              # SystemOverlay, ArchitecturePanel, HowItWorks
-│   │   ├── report/                # AIReport
-│   │   └── ui/                    # Shared UI primitives (Button, Slider, etc.)
-│   ├── hooks/
-│   │   ├── useBacktest.ts         # Backtest API client + payload builder
-│   │   └── useWebSocket.ts        # WebSocket connection manager
-│   ├── llm/
-│   │   ├── providers.ts           # Groq LLM provider + JSON cleaner
-│   │   ├── strategyResolver.ts    # NL → strategy config resolver
-│   │   ├── universeResolver.ts    # NL → ticker list resolver
-│   │   └── reportGenerator.ts     # Post-backtest AI report generator
-│   ├── store/
-│   │   └── terminalStore.ts       # Zustand global state
-│   └── types/
-│       └── index.ts               # Shared TypeScript interfaces
-├── context/                       # Design docs (not committed)
-├── .gitignore
-└── LICENSE
+│   │   └── config_validator.py # Engine parameter bounds checking
+│   └── websocket/
+│       └── manager.py          # Streams live events & saves complete runs to DB
+│
+└── frontend/
+    ├── app/
+    │   ├── page.tsx            # Interactive layout & Zustand bindings
+    │   └── api/llm/route.ts    # Server-side proxy for Groq API
+    ├── components/
+    │   ├── input/              # Universe chips & parameter forms
+    │   ├── charts/             # Equity, Drawdown, and Sharpe charts
+    │   ├── analytics/          # Metrics cards & Execution Blotter log
+    │   └── history/            # Side panel run history & modal summaries
+    ├── hooks/
+    │   ├── useBacktest.ts      # Launches runs & handles auth headers
+    │   └── useWebSocket.ts     # WebSocket connect, message parser & disconnect hooks
+    └── store/
+        └── terminalStore.ts    # Zustand global store managing app state
 ```
 
 ---
 
-## Setup
+## Configuration Settings
 
-### Prerequisites
-- Python 3.9+
-- Node.js 18+
-- Both sibling repos cloned under the same parent directory:
+### Backend Environment Configuration
+Create a `.env` file inside `strategy-research-terminal/backend/.env`:
+```env
+# Module Paths
+DATA_DIR=/Users/khushalarora/Documents/Career/Trading-System-Workspace/market-data-pipeline/Backtester-Oriented-Market-Data-Pipeline/data
+ENGINE_PATH=/Users/khushalarora/Documents/Career/Trading-System-Workspace/market-data-pipeline/Event-Driven-Backtesting-Engine
+PIPELINE_PATH=/Users/khushalarora/Documents/Career/Trading-System-Workspace/market-data-pipeline/Backtester-Oriented-Market-Data-Pipeline
 
+# Security Credentials
+DATABASE_URL=postgresql://postgres:postgres@localhost:5432/strategy_terminal
+JWT_SECRET_KEY=use-a-strong-generated-key-here
+
+# Artificial Intelligence Model Key
+GROQ_API_KEY=gsk_your_groq_api_key_here
 ```
-market-data-pipeline/
-├── Backtester-Oriented-Market-Data-Pipeline/
-├── Event-Driven-Backtesting-Engine/
-└── strategy-research-terminal/         ← this repo
+
+### Generating a JWT Secret Key
+You can generate a secure secret key by running this command in your terminal:
+```bash
+python -c "import secrets; print(secrets.token_urlsafe(64))"
 ```
 
-### Backend
+### Database Tables Auto-Migration
+The backend database is managed via SQLAlchemy. When the FastAPI server starts up, it automatically creates the required tables (`users`, `backtest_runs`) in the PostgreSQL schema if they do not exist.
 
+### Frontend Environment Configuration
+Create a `.env.local` file inside `strategy-research-terminal/frontend/.env.local`:
+```env
+NEXT_PUBLIC_API_URL=http://127.0.0.1:8000
+NEXT_PUBLIC_WS_URL=ws://127.0.0.1:8000
+GROQ_API_KEY=gsk_your_groq_api_key_here
+```
+
+---
+
+## API Documentation
+
+### 👤 User Account Endpoints
+* `POST /auth/register` — Creates a new account.
+* `POST /auth/login` — Verifies passwords (bcrypt) and returns a JWT token.
+* `GET /auth/me` — Fetches current user information.
+* `PUT /auth/costs` — Updates the user's default transaction settings (`commission_model`, `commission_value`, `slippage_bps`).
+
+### 📈 Historical Runs Endpoints
+* `GET /api/runs` — Lists the user's completed simulation runs.
+* `GET /api/runs/{run_id}` — Fetches details of a specific run including complete trades list and metrics.
+* `DELETE /api/runs/{run_id}` — Deletes a simulation run from the history database.
+* `PATCH /api/runs/{run_id}/report` — Saves the AI-generated markdown report to the database record.
+
+### 📊 Ingestion & Launch Endpoints
+* `GET /api/data/symbols` — Lists symbols currently available in local Parquet storage.
+* `GET /api/data/info/{symbol}` — Probes symbol availability, checking if it is stored locally or fetchable via yfinance.
+* `POST /api/backtest/run` — Validates configurations, fetches missing asset records, registers the simulation session, and outputs a `run_id`.
+
+### 🔌 Live WebSocket Connection
+* `WS /ws/backtest/{run_id}` — Forwarding channel. Accepts `token` as a query parameter for authorized runs. Streams active progression metrics and execution entries.
+
+---
+
+## Development Guide
+
+### 1. Launch the Backend REST Server
 ```bash
 cd backend
 python -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
-```
-
-Create `backend/.env`:
-
-```env
-DATA_DIR=/absolute/path/to/Backtester-Oriented-Market-Data-Pipeline/data
-ENGINE_PATH=/absolute/path/to/Event-Driven-Backtesting-Engine
-PIPELINE_PATH=/absolute/path/to/Backtester-Oriented-Market-Data-Pipeline
-```
-
-Start the server:
-
-```bash
 uvicorn main:app --reload --port 8000
 ```
 
-### Frontend
-
+### 2. Launch the Next.js Client
 ```bash
 cd frontend
 npm install
 npm run dev
 ```
-
-Open [http://localhost:3000](http://localhost:3000).
-
----
-
-## API Reference
-
-| Endpoint | Method | Description |
-|---|---|---|
-| `/health` | GET | Health check |
-| `/api/data/info/{symbol}` | GET | Symbol data availability + yfinance validation |
-| `/api/data/symbols` | GET | List all locally available symbols |
-| `/api/backtest/run` | POST | Validate config, fetch data, register run → returns `run_id` |
-| `/ws/backtest/{run_id}` | WS | Stream live progress, trades, dividends, final metrics |
-| `/api/llm` | POST | Server-side Groq LLM proxy |
-
----
-
-## Tech Stack
-
-| Layer | Technology |
-|---|---|
-| Frontend | Next.js 15, React 19, TypeScript, Tailwind CSS |
-| State | Zustand |
-| Charts | Recharts |
-| Backend | FastAPI, Pydantic, uvicorn |
-| Engine | Event-Driven Backtesting Engine (Python) |
-| Data | Market Data Pipeline → yfinance → Parquet |
-| LLM | Groq API (Llama 3) |
-| Streaming | WebSocket + asyncio.Queue thread bridge |
+Open [http://localhost:3000](http://localhost:3000) to access the research workspace dashboard.
 
 ---
 
