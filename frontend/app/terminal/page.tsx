@@ -307,9 +307,7 @@ export default function TerminalDashboard() {
             <TradeLog />
           </div>
           <div className="h-px bg-border/40 w-full" />
-          <div className="h-[280px] shrink-0 overflow-hidden flex flex-col">
-            <RunHistory />
-          </div>
+          <RunHistory />
         </aside>
       </div>
 
