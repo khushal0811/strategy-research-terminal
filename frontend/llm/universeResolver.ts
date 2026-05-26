@@ -43,7 +43,6 @@ export async function resolveUniverse(
     return parsed.symbols
       .map((s) => s.replace(/[^A-Za-z0-9.-]/g, '').trim().toUpperCase())
       .filter((s) => s.length > 0)
-      .slice(0, 20) // Enforce max 20 symbols limit
   } catch (err) {
     console.error('Failed to parse universe resolution JSON:', resultText, err)
     throw new Error('LLM did not return a valid universe JSON structure.')
