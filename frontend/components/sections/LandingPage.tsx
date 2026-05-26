@@ -32,10 +32,18 @@ function LinkedinIcon({ className }: { className?: string }) {
 import ArchitecturePanel from '@/components/sections/ArchitecturePanel'
 
 interface LandingPageProps {
-  onLaunch: () => void
+  onLaunch?: () => void
 }
 
 export default function LandingPage({ onLaunch }: LandingPageProps) {
+  const handleLaunch = () => {
+    if (onLaunch) {
+      onLaunch()
+    } else {
+      window.open('/terminal', '_blank')
+    }
+  }
+
   return (
     <div className="min-h-screen flex flex-col bg-background text-foreground overflow-x-hidden">
       {/* ─── HERO ─── */}
@@ -106,7 +114,7 @@ export default function LandingPage({ onLaunch }: LandingPageProps) {
           {/* CTA */}
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-2">
             <button
-              onClick={onLaunch}
+              onClick={handleLaunch}
               className="group inline-flex items-center gap-2.5 px-8 py-3.5 rounded-xl text-sm font-bold
                          bg-primary text-primary-foreground
                          hover:bg-primary/90 active:scale-[0.97]
@@ -324,7 +332,7 @@ export default function LandingPage({ onLaunch }: LandingPageProps) {
             Open the terminal, describe your strategy, and watch the simulation run live.
           </p>
           <button
-            onClick={onLaunch}
+            onClick={handleLaunch}
             className="group inline-flex items-center gap-2.5 px-8 py-3.5 rounded-xl text-sm font-bold
                        bg-primary text-primary-foreground
                        hover:bg-primary/90 active:scale-[0.97]
