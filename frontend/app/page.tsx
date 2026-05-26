@@ -33,7 +33,7 @@ import UserMenu from '@/components/auth/UserMenu'
 import AccountSettings from '@/components/settings/AccountSettings'
 import RunHistory from '@/components/history/RunHistory'
 
-import { Shield, TrendingUp, Cpu, Sun, Moon, Info } from 'lucide-react'
+import { Shield, TrendingUp, Cpu, Sun, Moon, Info, RotateCcw } from 'lucide-react'
 
 export default function TerminalDashboard() {
   const store = useTerminalStore()
@@ -180,6 +180,21 @@ export default function TerminalDashboard() {
           </div>
           
           <div className="flex items-center space-x-3">
+            {/* Clear Run button — resets terminal dashboard state */}
+            {(store.status !== 'idle' || store.runId !== null) && (
+              <button
+                onClick={() => {
+                  store.resetRun()
+                  toast.success('Dashboard cleared. Ready for a new run!')
+                }}
+                className="flex items-center space-x-1.5 px-2.5 py-1 rounded border border-primary/20 bg-primary/5 hover:bg-primary/10 text-primary transition-all cursor-pointer text-[10px] font-mono font-bold uppercase tracking-wider h-6 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                title="Reset dashboard and clear current run"
+              >
+                <RotateCcw className="h-3 w-3" />
+                <span>Clear Run</span>
+              </button>
+            )}
+
             {/* Info button — opens system overlay */}
             <button
               onClick={() => setOverlayOpen(true)}
